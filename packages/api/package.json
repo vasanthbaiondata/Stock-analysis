@@ -1,0 +1,9 @@
+{
+  "name": "@app/api",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@app/core": "workspace:*",
+    "axios": "^1.13.2"
+  }
+}

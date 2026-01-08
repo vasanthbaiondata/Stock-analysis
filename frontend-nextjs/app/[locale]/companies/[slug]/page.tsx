@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ChartToolbar from "../ChartToolbar";
-import StockChart from "../StockChart";
+import { getStockHistory, getAnalysis } from "@app/api";
+import { StockChart, ChartToolbar } from "@app/ui";
 
-/* ---------------- TYPES ---------------- */
+/* ---------------- TYPES (PAGE-LEVEL) ---------------- */
 
-type StockItem = {
+/**
+ * UI-facing chart data
+ * (Mapped from API response)
+ */
+type ChartPoint = {
   date: string;
   price: number;
   volume?: number;
@@ -20,7 +24,7 @@ type AnalysisData = {
 
 /* ---------------- HELPERS ---------------- */
 
-function filterByRange(data: StockItem[], range: string) {
+function filterByRange(data: ChartPoint[], range: string) {
   if (range === "Max") return data;
 
   const map: Record<string, number> = {
@@ -28,7 +32,7 @@ function filterByRange(data: StockItem[], range: string) {
     "6M": 180,
     "1Yr": 365,
     "3Yr": 1095,
-    "5Yr": 1825,
+    "5Yr": 1825
   };
 
   return data.slice(-map[range]);
@@ -37,44 +41,29 @@ function filterByRange(data: StockItem[], range: string) {
 /* ---------------- PAGE ---------------- */
 
 export default function CompanyPage() {
-  const [data, setData] = useState<StockItem[]>([]);
+  const [data, setData] = useState<ChartPoint[]>([]);
+  const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
+
   const [range, setRange] = useState("1Yr");
   const [showPrice, setShowPrice] = useState(true);
   const [showVolume, setShowVolume] = useState(true);
 
-  const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
-
-  /* -------- FETCH STOCK DATA -------- */
+  /* -------- FETCH DATA -------- */
 
   useEffect(() => {
-    fetch(
-      "http://127.0.0.1:1337/api/stock-price-histories?pagination[pageSize]=500&sort=date:asc",
-      { cache: "no-store" }
-    )
-      .then((r) => r.json())
-      .then((json) =>
-        setData(
-          json.data.map((i: any) => ({
-            date: i.date,
-            price: Number(i.price),
-            volume: i.volume ?? Math.floor(Math.random() * 500000),
-          }))
-        )
-      );
-  }, []);
+    // Stock data
+    getStockHistory().then((apiData) => {
+      const chartData: ChartPoint[] = apiData.map((item) => ({
+        date: item.date,
+        price: item.price,
+        volume: item.volume
+      }));
 
-  /* -------- FETCH ANALYSIS -------- */
+      setData(chartData);
+    });
 
-  useEffect(() => {
-    fetch("http://localhost:1337/api/analysis", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((json) =>
-        setAnalysis({
-          pros: json.data.pros,
-          cons: json.data.cons,
-          disclaimer: json.data.disclaimer,
-        })
-      );
+    // Analysis data
+    getAnalysis().then(setAnalysis);
   }, []);
 
   const filtered = filterByRange(data, range);
@@ -103,10 +92,11 @@ export default function CompanyPage() {
       {analysis && (
         <div className="bg-white rounded-xl shadow p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
             {/* PROS */}
-            <div className="border border-green-300 rounded-lg p-4">
-              <h3 className="font-semibold text-green-700 mb-3">PROS</h3>
+            <div className="border border-red-300 rounded-lg p-4">
+              <h3 className="font-semibold text-green-700 mb-3">
+                PROS
+              </h3>
               <ul className="list-disc list-inside space-y-2 text-sm text-gray-700">
                 {analysis.pros.map((item, index) => (
                   <li key={index}>{item}</li>
@@ -116,14 +106,15 @@ export default function CompanyPage() {
 
             {/* CONS */}
             <div className="border border-red-300 rounded-lg p-4">
-              <h3 className="font-semibold text-red-700 mb-3">CONS</h3>
+              <h3 className="font-semibold text-red-700 mb-3">
+                CONS
+              </h3>
               <ul className="list-disc list-inside space-y-2 text-sm text-gray-700">
                 {analysis.cons.map((item, index) => (
                   <li key={index}>{item}</li>
                 ))}
               </ul>
             </div>
-
           </div>
 
           {analysis.disclaimer && (

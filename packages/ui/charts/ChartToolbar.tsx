@@ -11,17 +11,18 @@ type Props = {
 
 const ranges = ["1M", "6M", "1Yr", "3Yr", "5Yr", "Max"];
 
-export default function ChartToolbar({
-  range,
-  setRange,
-  showPrice,
-  setShowPrice,
-  showVolume,
-  setShowVolume,
-}: Props) {
+export function ChartToolbar(props: Props) {
+  const {
+    range,
+    setRange,
+    showPrice,
+    setShowPrice,
+    showVolume,
+    setShowVolume
+  } = props;
+
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4">
-      {/* Range buttons */}
+    <div className="flex flex-wrap justify-between gap-4">
       <div className="flex border rounded-md overflow-hidden">
         {ranges.map((r) => (
           <button
@@ -38,23 +39,22 @@ export default function ChartToolbar({
         ))}
       </div>
 
-      {/* Toggles */}
-      <div className="flex items-center gap-4 text-sm">
-        <label className="flex items-center gap-1">
+      <div className="flex gap-4 text-sm">
+        <label>
           <input
             type="checkbox"
             checked={showPrice}
             onChange={(e) => setShowPrice(e.target.checked)}
-          />
+          />{" "}
           Price
         </label>
 
-        <label className="flex items-center gap-1">
+        <label>
           <input
             type="checkbox"
             checked={showVolume}
             onChange={(e) => setShowVolume(e.target.checked)}
-          />
+          />{" "}
           Volume
         </label>
       </div>

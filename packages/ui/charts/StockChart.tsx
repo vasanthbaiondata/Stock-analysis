@@ -1,20 +1,26 @@
 "use client";
 
+import type * as ECharts from "echarts";
 import * as echarts from "echarts";
 import { useEffect, useRef } from "react";
 
-type DataPoint = {
+
+/**
+ * UI-level data shape
+ * (DO NOT import from @app/api)
+ */
+export type ChartPoint = {
   date: string;
   price: number;
   volume?: number;
 };
 
-export default function StockChart({
+export function StockChart({
   data,
   showPrice,
-  showVolume,
+  showVolume
 }: {
-  data: DataPoint[];
+  data: ChartPoint[];
   showPrice: boolean;
   showVolume: boolean;
 }) {
@@ -29,50 +35,32 @@ export default function StockChart({
       tooltip: { trigger: "axis" },
       grid: { left: "5%", right: "5%", bottom: "15%" },
 
-      xAxis: [
-        {
-          type: "category",
-          data: data.map((d) => d.date),
-        },
-      ],
+      xAxis: {
+        type: "category",
+        data: data.map((d) => d.date)
+      },
 
       yAxis: [
-        {
-          type: "value",
-          scale: true,
-          name: "Price",
-        },
-        {
-          type: "value",
-          scale: true,
-          name: "Volume",
-          show: showVolume,
-        },
+        { type: "value", name: "Price", scale: true },
+        { type: "value", name: "Volume", scale: true, show: showVolume }
       ],
 
-      dataZoom: [
-        { type: "inside" },
-        { type: "slider", bottom: 0 },
-      ],
+      dataZoom: [{ type: "inside" }, { type: "slider", bottom: 0 }],
 
       series: [
         showPrice && {
           name: "Price",
           type: "line",
           smooth: true,
-          showSymbol: false,
-          data: data.map((d) => d.price),
-          lineStyle: { width: 2 },
+          data: data.map((d) => d.price)
         },
-
         showVolume && {
           name: "Volume",
           type: "bar",
           yAxisIndex: 1,
-          data: data.map((d) => d.volume ?? 0),
-          itemStyle: { color: "rgba(37,99,235,0.3)" },
-        },
-      ].filter(Boolean),
+          data: data.map((d) => d.volume ?? 0)
+        }
+      ].filter(Boolean)
     });
 
     return () => chart.dispose();
